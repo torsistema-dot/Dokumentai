@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Važtaraštis</title>
+<style>
+  :root {
+    --ink: #1c1f23;
+    --muted: #6a7078;
+    --line: #c9cdd2;
+    --paper: #ffffff;
+    --desk: #e9ebee;
+    --accent: #0b6e7f;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--desk);
+    color: var(--ink);
+    font: 14px/1.45 "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+    padding: 16px;
+  }
+  .toolbar {
+    max-width: 210mm; margin: 0 auto 12px;
+    display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+  }
+  .toolbar .hint { color: var(--muted); font-size: 13px; margin-right: auto; }
+  button {
+    font: inherit; cursor: pointer; border: 1px solid var(--accent);
+    background: var(--accent); color: #fff; padding: 8px 14px; border-radius: 6px;
+  }
+  button.ghost { background: transparent; color: var(--accent); }
+  button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  .sheet {
+    background: var(--paper);
+    width: 210mm; max-width: 100%; min-height: 297mm;
+    margin: 0 auto; padding: 16mm 16mm 14mm;
+    box-shadow: 0 1px 6px rgba(0,0,0,.18);
+    display: flex; flex-direction: column;
+  }
+  .bottom { margin-top: auto; }
+  header.doc {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    border-bottom: 2px solid var(--ink); padding-bottom: 8px; margin-bottom: 16px;
+  }
+  header.doc h1 { margin: 0; font-size: 26px; letter-spacing: .01em; }
+  .brand { display: flex; align-items: center; gap: 14px; }
+  #logo { height: 46px; width: auto; }
+  header.doc .date { text-align: right; }
+  .date label { display: block; color: var(--muted); font-size: 12px; }
+  .date input { text-align: right; font-weight: 600; width: auto; }
+
+  .parties { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px; }
+  .box { border: 1px solid var(--line); border-radius: 4px; padding: 10px 12px; }
+  .box h2 { margin: 0 0 6px; font-size: 13px; font-weight: 600; color: var(--accent); }
+  .row { display: grid; grid-template-columns: 112px 1fr; align-items: center; gap: 8px; margin: 3px 0; }
+  .row > span { color: var(--muted); font-size: 12.5px; }
+
+  input, textarea {
+    font: inherit; color: inherit; width: 100%;
+    border: 0; border-bottom: 1px dashed transparent; background: transparent;
+    padding: 3px 2px; border-radius: 0;
+  }
+  input:hover, textarea:hover, input:focus, textarea:focus { border-bottom-color: var(--line); background: #f6f8f9; }
+  textarea { resize: vertical; min-height: 54px; }
+
+  h2.sec { font-size: 13px; color: var(--accent); margin: 0 0 4px; font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+  th, td { border: 1px solid var(--line); padding: 4px 6px; text-align: left; vertical-align: top; }
+  th { background: #f1f3f5; font-weight: 600; font-size: 12.5px; }
+  td.n { width: 34px; text-align: center; color: var(--muted); }
+  td.q { width: 80px; } td.u { width: 70px; } td.t { width: 120px; }
+  td.x { width: 28px; text-align: center; border: 0; }
+  td.x button { padding: 0 6px; background: transparent; color: var(--muted); border: 0; font-size: 16px; }
+  .add { margin-bottom: 18px; align-self: flex-start; }
+
+  .notes { margin-bottom: 22px; }
+  .notes h2 { font-size: 13px; color: var(--accent); margin: 0 0 4px; font-weight: 600; }
+  .notes textarea { border: 1px solid var(--line); min-height: 70px; padding: 6px 8px; }
+
+  .signs { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-top: 34px; }
+  .sign .line { border-bottom: 1px solid var(--ink); height: 34px; }
+  .sign small { color: var(--muted); display: block; margin-top: 4px; }
+
+  @media (max-width: 640px) {
+    .parties, .signs { grid-template-columns: 1fr; }
+    .sheet { padding: 12mm 8mm; }
+  }
+  @media print {
+    body { background: #fff; padding: 0; }
+    .toolbar, .add, td.x, th.x { display: none !important; }
+    .sheet { box-shadow: none; width: auto; min-height: 266mm; margin: 0; padding: 0; }
+    input:hover, textarea:hover { background: transparent; border-bottom-color: transparent; }
+    @page { size: A4; margin: 14mm; }
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <span class="hint" id="hint"></span>
+  <button id="print" type="button">Spausdinti / PDF</button>
+</div>
+
+<main class="sheet">
+  <header class="doc">
+    <div class="brand">
+      <img id="logo" src="logo.png" alt="" onerror="this.style.display='none'">
+      <h1>Važtaraštis</h1>
+    </div>
+    <div class="date">
+      <label for="data">Data</label>
+      <input id="data" type="date">
+    </div>
+  </header>
+
+  <section class="parties">
+    <div class="box">
+      <h2>Siuntėjas</h2>
+      <div class="row"><span>Įmonė</span><input id="s_imone"></div>
+      <div class="row"><span>Įm. kodas</span><input id="s_kodas"></div>
+      <div class="row"><span>PVM kodas</span><input id="s_pvm"></div>
+      <div class="row"><span>Registracijos adresas</span><input id="s_adresas"></div>
+      <div class="row"><span>Pakrovimo vieta</span><input id="s_pakrovimas"></div>
+    </div>
+    <div class="box">
+      <h2>Pervežimas</h2>
+      <div class="row"><span>Automobilis</span><input id="auto"></div>
+      <div class="row"><span>Vairuotojai</span><input id="vairuotojas"></div>
+    </div>
+  </section>
+
+  <h2 class="sec">Pristatymo vietos</h2>
+  <table id="stops">
+    <thead>
+      <tr><th>#</th><th>Klientas</th><th>Telefonas</th><th>Adresas</th><th>Pastabos</th><th class="x"></th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  <button class="ghost add" id="addStop" type="button">+ Pridėti pristatymo vietą</button>
+
+  <h2 class="sec">Prekės</h2>
+  <table id="items">
+    <thead>
+      <tr><th>#</th><th>Pavadinimas</th><th>Kiekis</th><th>Vnt.</th><th class="x"></th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  <button class="ghost add" id="addItem" type="button">+ Pridėti prekę</button>
+
+  <div class="bottom">
+    <section class="notes">
+      <h2>Pastabos</h2>
+      <textarea id="pastabos"></textarea>
+    </section>
+
+    <section class="signs">
+      <div class="sign">
+        <div class="line"></div>
+        <small>Išdavė (vardas, pavardė, parašas)</small>
+      </div>
+      <div class="sign">
+        <div class="line"></div>
+        <small>Priėmė (vardas, pavardė, parašas)</small>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var params = new URLSearchParams(location.search);
+
+  // Siuntėjo rekvizitai. Keiskite čia, kai keisis rekvizitai.
+  var REKVIZITAI = {
+    s_imone: 'UAB "Toreda LT"',
+    s_kodas: '306138274',
+    s_pvm: 'LT100015258918',
+    s_adresas: '',                        // <-- įrašykite pilną registracijos adresą
+    s_pakrovimas: 'Žemaitės g. 135, Šiauliai'
+  };
+  Object.keys(REKVIZITAI).forEach(function (id) { $(id).value = REKVIZITAI[id]; });
+
+  // Brigados automobilis. Jei Airtable automobilio nepateikia, jis parenkamas pagal brigados pavadinimą.
+  // Pavadinimas turi sutapti su tuo, ką siunčia Airtable mygtukas.
+  var BRIGADOS_AUTO = {
+    'Tadas, Ighor': 'VW CRAFTER AYG 236',
+    'Vaidas, Lukas': 'VW CRAFTER NYS 927',
+    'Evaldas, Klaidas': 'FIAT DUCATO LZO 637'
+  };
+
+  // ?d=  (skirtukas ;)
+  //   1 eilutė:   data ; vairuotojai ; automobilis (automobilį galima praleisti)
+  //   kitos eilutės – pristatymo vietos:   klientas | telefonas | adresas | pastabos  (taip pat tinka ;)
+  function splitLine(line, sep) {
+    sep = sep || ';';
+    var out = [], cur = '', q = false;
+    for (var i = 0; i < line.length; i++) {
+      var c = line.charAt(i);
+      if (c === '"') {
+        if (q && line.charAt(i + 1) === '"') { cur += '"'; i++; } else { q = !q; }
+      } else if (c === sep && !q) { out.push(cur); cur = ''; }
+      else { cur += c; }
+    }
+    out.push(cur);
+    return out;
+  }
+
+  function renumber(tbody) {
+    Array.prototype.forEach.call(tbody.rows, function (tr, i) {
+      tr.querySelector('.n').textContent = i + 1;
+    });
+  }
+  function makeRow(tbody, cells) {
+    var tr = document.createElement('tr');
+    var html = '<td class="n"></td>';
+    cells.forEach(function (c) {
+      html += '<td class="' + (c.cls || '') + '"><input inputmode="' + (c.mode || 'text') + '"></td>';
+    });
+    html += '<td class="x"><button type="button" title="Šalinti eilutę" aria-label="Šalinti eilutę">×</button></td>';
+    tr.innerHTML = html;
+    var inputs = tr.querySelectorAll('td input');
+    cells.forEach(function (c, i) { inputs[i].value = c.val || ''; });
+    tr.querySelector('.x button').addEventListener('click', function () { tr.remove(); renumber(tbody); });
+    tbody.appendChild(tr);
+    renumber(tbody);
+  }
+
+  var stopsBody = document.querySelector('#stops tbody');
+  var itemsBody = document.querySelector('#items tbody');
+  function addStop(c) {
+    c = c || [];
+    makeRow(stopsBody, [
+      { val: (c[0] || '').trim() },
+      { val: (c[1] || '').trim(), cls: 't', mode: 'tel' },
+      { val: (c[2] || '').trim() },
+      { val: (c[3] || '').trim() }
+    ]);
+  }
+  function addItem(c) {
+    c = c || [];
+    makeRow(itemsBody, [
+      { val: (c[0] || '').trim() },
+      { val: (c[1] || '').trim(), cls: 'q', mode: 'decimal' },
+      { val: (c[2] || '').trim(), cls: 'u' }
+    ]);
+  }
+
+  var filled = 0;
+  var d = params.get('d');
+  if (d) {
+    var lines = d.replace(/\r/g, '').split('\n').filter(function (l) { return l.trim(); });
+    if (lines.length) {
+      var head = splitLine(lines[0]);
+      [['data', 0], ['vairuotojas', 1], ['auto', 2]].forEach(function (p) {
+        var v = (head[p[1]] || '').trim();
+        if (v) { $(p[0]).value = v; filled++; }
+      });
+      lines.slice(1).forEach(function (l) {
+        addStop(splitLine(l, l.indexOf('|') >= 0 ? '|' : ';'));
+        filled++;
+      });
+    }
+  }
+
+  if (!$('auto').value && BRIGADOS_AUTO[$('vairuotojas').value.trim()]) {
+    $('auto').value = BRIGADOS_AUTO[$('vairuotojas').value.trim()];
+  }
+  if (!$('data').value) $('data').value = new Date().toISOString().slice(0, 10);
+  while (stopsBody.rows.length < 2) addStop();
+  while (itemsBody.rows.length < 5) addItem();
+
+  $('addStop').addEventListener('click', function () { addStop(); });
+  $('addItem').addEventListener('click', function () { addItem(); });
+  $('print').addEventListener('click', function () { window.print(); });
+
+  $('hint').textContent = filled
+    ? 'Užpildyta iš Airtable. Galite taisyti prieš spausdinant.'
+    : 'Nėra duomenų iš Airtable – užpildykite ranka.';
+})();
+</script>
+</body>
+</html>
