@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Važtaraštis</title>
+<style>
+  :root {
+    --ink: #1c1f23;
+    --muted: #6a7078;
+    --line: #c9cdd2;
+    --paper: #ffffff;
+    --desk: #e9ebee;
+    --accent: #0b6e7f;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--desk);
+    color: var(--ink);
+    font: 14px/1.45 "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+    padding: 16px;
+  }
+  .toolbar {
+    max-width: 210mm; margin: 0 auto 12px;
+    display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+  }
+  .toolbar .hint { color: var(--muted); font-size: 13px; margin-right: auto; }
+  button {
+    font: inherit; cursor: pointer; border: 1px solid var(--accent);
+    background: var(--accent); color: #fff; padding: 8px 14px; border-radius: 6px;
+  }
+  button.ghost { background: transparent; color: var(--accent); }
+  button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  .sheet {
+    background: var(--paper);
+    width: 210mm; max-width: 100%; min-height: 297mm;
+    margin: 0 auto; padding: 16mm 16mm 14mm;
+    box-shadow: 0 1px 6px rgba(0,0,0,.18);
+  }
+  header.doc {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    border-bottom: 2px solid var(--ink); padding-bottom: 8px; margin-bottom: 16px;
+  }
+  header.doc h1 { margin: 0; font-size: 26px; letter-spacing: .01em; }
+  header.doc .nr { text-align: right; }
+  .nr label { display: block; color: var(--muted); font-size: 12px; }
+  .nr input { text-align: right; font-weight: 600; }
+
+  .parties { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px; }
+  .box { border: 1px solid var(--line); border-radius: 4px; padding: 10px 12px; }
+  .box h2 { margin: 0 0 6px; font-size: 13px; font-weight: 600; color: var(--accent); }
+  .row { display: grid; grid-template-columns: 92px 1fr; align-items: center; gap: 8px; margin: 3px 0; }
+  .row > span { color: var(--muted); font-size: 12.5px; }
+
+  input, textarea {
+    font: inherit; color: inherit; width: 100%;
+    border: 0; border-bottom: 1px dashed transparent; background: transparent;
+    padding: 3px 2px; border-radius: 0;
+  }
+  input:hover, textarea:hover, input:focus, textarea:focus { border-bottom-color: var(--line); background: #f6f8f9; }
+  textarea { resize: vertical; min-height: 54px; }
+
+  .meta { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 16px; }
+
+  table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+  th, td { border: 1px solid var(--line); padding: 4px 6px; text-align: left; vertical-align: top; }
+  th { background: #f1f3f5; font-weight: 600; font-size: 12.5px; }
+  td.n { width: 34px; text-align: center; color: var(--muted); }
+  td.q { width: 80px; } td.u { width: 70px; }
+  td.x { width: 28px; text-align: center; border: 0; }
+  td.x button { padding: 0 6px; background: transparent; color: var(--muted); border: 0; font-size: 16px; }
+  .add { margin-bottom: 18px; }
+
+  .notes { margin-bottom: 22px; }
+  .notes h2 { font-size: 13px; color: var(--accent); margin: 0 0 4px; font-weight: 600; }
+  .notes textarea { border: 1px solid var(--line); min-height: 70px; padding: 6px 8px; }
+
+  .signs { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-top: 34px; }
+  .sign .line { border-bottom: 1px solid var(--ink); height: 34px; }
+  .sign small { color: var(--muted); display: block; margin-top: 4px; }
+  .sign input { margin-top: 6px; }
+
+  @media (max-width: 640px) {
+    .parties, .meta, .signs { grid-template-columns: 1fr; }
+    .sheet { padding: 12mm 8mm; }
+  }
+  @media print {
+    body { background: #fff; padding: 0; }
+    .toolbar, .add, td.x, th.x { display: none !important; }
+    .sheet { box-shadow: none; width: auto; min-height: 0; margin: 0; padding: 0; }
+    input:hover, textarea:hover { background: transparent; border-bottom-color: transparent; }
+    @page { size: A4; margin: 14mm; }
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <span class="hint" id="hint"></span>
+  <button class="ghost" id="saveSender" type="button">Įsiminti siuntėją</button>
+  <button id="print" type="button">Spausdinti / PDF</button>
+</div>
+
+<main class="sheet">
+  <header class="doc">
+    <h1>Važtaraštis</h1>
+    <div class="nr">
+      <label for="nr">Nr.</label>
+      <input id="nr" placeholder="VŽ-0001">
+    </div>
+  </header>
+
+  <section class="meta">
+    <div class="row"><span>Data</span><input id="data" type="date"></div>
+    <div class="row"><span>Pristatymo data</span><input id="pristatymas" type="date"></div>
+    <div class="row"><span>Užsakymas</span><input id="uzsakymas" placeholder="Užsakymo nr."></div>
+  </section>
+
+  <section class="parties">
+    <div class="box">
+      <h2>Siuntėjas</h2>
+      <div class="row"><span>Įmonė</span><input id="s_imone" value="UAB Toreda LT"></div>
+      <div class="row"><span>Įm. kodas</span><input id="s_kodas"></div>
+      <div class="row"><span>Adresas</span><input id="s_adresas"></div>
+      <div class="row"><span>Telefonas</span><input id="s_tel"></div>
+    </div>
+    <div class="box">
+      <h2>Gavėjas</h2>
+      <div class="row"><span>Vardas, pavardė</span><input id="g_vardas"></div>
+      <div class="row"><span>Telefonas</span><input id="g_tel"></div>
+      <div class="row"><span>Adresas</span><input id="g_adresas"></div>
+      <div class="row"><span>Įmonė</span><input id="g_imone"></div>
+    </div>
+  </section>
+
+  <table id="items">
+    <thead>
+      <tr><th>#</th><th>Pavadinimas</th><th>Kiekis</th><th>Vnt.</th><th class="x"></th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  <button class="ghost add" id="addRow" type="button">+ Pridėti eilutę</button>
+
+  <section class="notes">
+    <h2>Pastabos</h2>
+    <textarea id="pastabos"></textarea>
+  </section>
+
+  <section class="signs">
+    <div class="sign">
+      <div class="line"></div>
+      <small>Išdavė (vardas, pavardė, parašas)</small>
+      <input id="isdave">
+    </div>
+    <div class="sign">
+      <div class="line"></div>
+      <small>Priėmė (vardas, pavardė, parašas)</small>
+      <input id="prieme">
+    </div>
+  </section>
+</main>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var params = new URLSearchParams(location.search);
+
+  // URL parametras -> laukas. Pagal poreikį pridėkite naujų eilučių.
+  var map = {
+    nr: 'nr', data: 'data', pristatymas: 'pristatymas', uzsakymas: 'uzsakymas',
+    vardas: 'g_vardas', tel: 'g_tel', adresas: 'g_adresas', imone: 'g_imone',
+    pastabos: 'pastabos', isdave: 'isdave'
+  };
+
+  // 1) siuntėjo duomenys, išsaugoti naršyklėje
+  var senderIds = ['s_imone', 's_kodas', 's_adresas', 's_tel', 'isdave'];
+  try {
+    var saved = JSON.parse(localStorage.getItem('vaztarastis_sender') || '{}');
+    senderIds.forEach(function (id) { if (saved[id]) $(id).value = saved[id]; });
+  } catch (e) {}
+
+  // 2a) CSV iš vieno Airtable langelio (?csv=...)
+  // Formatas (skirtukas ;):
+  //   raktas;reikšmė        (nr, data, vardas, tel, adresas, pastabos ...)
+  //   #prekes
+  //   pavadinimas;kiekis;vnt
+  function splitLine(line) {
+    var out = [], cur = '', q = false;
+    for (var i = 0; i < line.length; i++) {
+      var c = line.charAt(i);
+      if (c === '"') {
+        if (q && line.charAt(i + 1) === '"') { cur += '"'; i++; } else { q = !q; }
+      } else if (c === ';' && !q) { out.push(cur); cur = ''; }
+      else { cur += c; }
+    }
+    out.push(cur);
+    return out;
+  }
+
+  var filled = 0;
+  var csvItems = [];
+  var csv = params.get('csv');
+  if (csv) {
+    var inItems = false;
+    csv.replace(/\r/g, '').split('\n').forEach(function (line) {
+      if (!line.trim()) return;
+      if (line.trim().toLowerCase() === '#prekes') { inItems = true; return; }
+      var cells = splitLine(line);
+      if (inItems) {
+        if (/^pavadinimas$/i.test(cells[0].trim())) return; // antraštė
+        csvItems.push(cells);
+      } else {
+        var key = cells[0].trim().toLowerCase();
+        if (map[key]) { $(map[key]).value = (cells[1] || '').trim(); filled++; }
+      }
+    });
+  }
+
+  // 2a-2) trumpas formatas be raktų (?d=...)
+  // 1 eilutė – laukai šia tvarka (tuščius galo laukus galima praleisti):
+  //   nr;data;vardas;tel;adresas;pastabos;uzsakymas;pristatymas;imone;isdave
+  // Kitos eilutės – prekės: pavadinimas;kiekis;vnt
+  var d = params.get('d');
+  if (d) {
+    var order = ['nr', 'data', 'vardas', 'tel', 'adresas', 'pastabos',
+                 'uzsakymas', 'pristatymas', 'imone', 'isdave'];
+    var dLines = d.replace(/\r/g, '').split('\n').filter(function (l) { return l.trim(); });
+    if (dLines.length) {
+      var head = splitLine(dLines[0]);
+      order.forEach(function (k, i) {
+        if (head[i] && head[i].trim()) { $(map[k]).value = head[i].trim(); filled++; }
+      });
+      dLines.slice(1).forEach(function (l) { csvItems.push(splitLine(l)); });
+    }
+  }
+
+  // 2b) pavieniai laukai iš URL (neprivaloma, veikia kaip anksčiau)
+  Object.keys(map).forEach(function (key) {
+    var v = params.get(key);
+    if (v !== null && v !== '') { $(map[key]).value = v; filled++; }
+  });
+
+  // data pagal nutylėjimą – šiandien
+  if (!$('data').value) $('data').value = new Date().toISOString().slice(0, 10);
+
+  // 3) prekių eilutės. Formatas: pavadinimas|kiekis|vnt;pavadinimas|kiekis|vnt
+  var tbody = document.querySelector('#items tbody');
+
+  function renumber() {
+    Array.prototype.forEach.call(tbody.rows, function (tr, i) {
+      tr.querySelector('.n').textContent = i + 1;
+    });
+  }
+  function addRow(name, qty, unit) {
+    var tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td class="n"></td>' +
+      '<td><input class="in-name"></td>' +
+      '<td class="q"><input class="in-qty" inputmode="decimal"></td>' +
+      '<td class="u"><input class="in-unit"></td>' +
+      '<td class="x"><button type="button" title="Šalinti eilutę" aria-label="Šalinti eilutę">×</button></td>';
+    tr.querySelector('.in-name').value = name || '';
+    tr.querySelector('.in-qty').value = qty || '';
+    tr.querySelector('.in-unit').value = unit || '';
+    tr.querySelector('.x button').addEventListener('click', function () { tr.remove(); renumber(); });
+    tbody.appendChild(tr);
+    renumber();
+  }
+
+  var itemsParam = params.get('prekes');
+  if (itemsParam) {
+    itemsParam.split(';').forEach(function (chunk) {
+      if (!chunk.trim()) return;
+      var p = chunk.split('|');
+      addRow((p[0] || '').trim(), (p[1] || '').trim(), (p[2] || 'vnt.').trim());
+    });
+  }
+  csvItems.forEach(function (c) {
+    addRow((c[0] || '').trim(), (c[1] || '').trim(), (c[2] || 'vnt.').trim());
+  });
+  while (tbody.rows.length < 8) addRow();
+
+  $('addRow').addEventListener('click', function () { addRow(); });
+  $('print').addEventListener('click', function () { window.print(); });
+
+  $('saveSender').addEventListener('click', function () {
+    var o = {};
+    senderIds.forEach(function (id) { o[id] = $(id).value; });
+    try {
+      localStorage.setItem('vaztarastis_sender', JSON.stringify(o));
+      $('hint').textContent = 'Siuntėjo duomenys išsaugoti šioje naršyklėje.';
+    } catch (e) {
+      $('hint').textContent = 'Nepavyko išsaugoti.';
+    }
+  });
+
+  $('hint').textContent = filled
+    ? 'Užpildyta iš Airtable (' + filled + ' laukai). Galite taisyti prieš spausdinant.'
+    : 'Nėra duomenų iš Airtable – užpildykite ranka.';
+
+  document.title = 'Važtaraštis ' + ($('nr').value || '');
+})();
+</script>
+</body>
+</html>
