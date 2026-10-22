@@ -38,20 +38,24 @@
     width: 210mm; max-width: 100%; min-height: 297mm;
     margin: 0 auto; padding: 16mm 16mm 14mm;
     box-shadow: 0 1px 6px rgba(0,0,0,.18);
+    display: flex; flex-direction: column;
   }
+  .bottom { margin-top: auto; }
   header.doc {
     display: flex; justify-content: space-between; align-items: flex-end;
     border-bottom: 2px solid var(--ink); padding-bottom: 8px; margin-bottom: 16px;
   }
   header.doc h1 { margin: 0; font-size: 26px; letter-spacing: .01em; }
-  header.doc .nr { text-align: right; }
-  .nr label { display: block; color: var(--muted); font-size: 12px; }
-  .nr input { text-align: right; font-weight: 600; }
+  .brand { display: flex; align-items: center; gap: 14px; }
+  #logo { height: 46px; width: auto; }
+  header.doc .date { text-align: right; }
+  .date label { display: block; color: var(--muted); font-size: 12px; }
+  .date input { text-align: right; font-weight: 600; width: auto; }
 
   .parties { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px; }
   .box { border: 1px solid var(--line); border-radius: 4px; padding: 10px 12px; }
   .box h2 { margin: 0 0 6px; font-size: 13px; font-weight: 600; color: var(--accent); }
-  .row { display: grid; grid-template-columns: 92px 1fr; align-items: center; gap: 8px; margin: 3px 0; }
+  .row { display: grid; grid-template-columns: 112px 1fr; align-items: center; gap: 8px; margin: 3px 0; }
   .row > span { color: var(--muted); font-size: 12.5px; }
 
   input, textarea {
@@ -62,16 +66,15 @@
   input:hover, textarea:hover, input:focus, textarea:focus { border-bottom-color: var(--line); background: #f6f8f9; }
   textarea { resize: vertical; min-height: 54px; }
 
-  .meta { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 16px; }
-
+  h2.sec { font-size: 13px; color: var(--accent); margin: 0 0 4px; font-weight: 600; }
   table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
   th, td { border: 1px solid var(--line); padding: 4px 6px; text-align: left; vertical-align: top; }
   th { background: #f1f3f5; font-weight: 600; font-size: 12.5px; }
   td.n { width: 34px; text-align: center; color: var(--muted); }
-  td.q { width: 80px; } td.u { width: 70px; }
+  td.q { width: 80px; } td.u { width: 70px; } td.t { width: 120px; }
   td.x { width: 28px; text-align: center; border: 0; }
   td.x button { padding: 0 6px; background: transparent; color: var(--muted); border: 0; font-size: 16px; }
-  .add { margin-bottom: 18px; }
+  .add { margin-bottom: 18px; align-self: flex-start; }
 
   .notes { margin-bottom: 22px; }
   .notes h2 { font-size: 13px; color: var(--accent); margin: 0 0 4px; font-weight: 600; }
@@ -80,16 +83,15 @@
   .signs { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-top: 34px; }
   .sign .line { border-bottom: 1px solid var(--ink); height: 34px; }
   .sign small { color: var(--muted); display: block; margin-top: 4px; }
-  .sign input { margin-top: 6px; }
 
   @media (max-width: 640px) {
-    .parties, .meta, .signs { grid-template-columns: 1fr; }
+    .parties, .signs { grid-template-columns: 1fr; }
     .sheet { padding: 12mm 8mm; }
   }
   @media print {
     body { background: #fff; padding: 0; }
     .toolbar, .add, td.x, th.x { display: none !important; }
-    .sheet { box-shadow: none; width: auto; min-height: 0; margin: 0; padding: 0; }
+    .sheet { box-shadow: none; width: auto; min-height: 266mm; margin: 0; padding: 0; }
     input:hover, textarea:hover { background: transparent; border-bottom-color: transparent; }
     @page { size: A4; margin: 14mm; }
   }
@@ -99,67 +101,72 @@
 
 <div class="toolbar">
   <span class="hint" id="hint"></span>
-  <button class="ghost" id="saveSender" type="button">Įsiminti siuntėją</button>
   <button id="print" type="button">Spausdinti / PDF</button>
 </div>
 
 <main class="sheet">
   <header class="doc">
-    <h1>Važtaraštis</h1>
-    <div class="nr">
-      <label for="nr">Nr.</label>
-      <input id="nr" placeholder="VŽ-0001">
+    <div class="brand">
+      <img id="logo" src="logo.png" alt="" onerror="this.style.display='none'">
+      <h1>Važtaraštis</h1>
+    </div>
+    <div class="date">
+      <label for="data">Data</label>
+      <input id="data" type="date">
     </div>
   </header>
-
-  <section class="meta">
-    <div class="row"><span>Data</span><input id="data" type="date"></div>
-    <div class="row"><span>Pristatymo data</span><input id="pristatymas" type="date"></div>
-    <div class="row"><span>Užsakymas</span><input id="uzsakymas" placeholder="Užsakymo nr."></div>
-  </section>
 
   <section class="parties">
     <div class="box">
       <h2>Siuntėjas</h2>
-      <div class="row"><span>Įmonė</span><input id="s_imone" value="UAB Toreda LT"></div>
+      <div class="row"><span>Įmonė</span><input id="s_imone"></div>
       <div class="row"><span>Įm. kodas</span><input id="s_kodas"></div>
-      <div class="row"><span>Adresas</span><input id="s_adresas"></div>
-      <div class="row"><span>Telefonas</span><input id="s_tel"></div>
+      <div class="row"><span>PVM kodas</span><input id="s_pvm"></div>
+      <div class="row"><span>Registracijos adresas</span><input id="s_adresas"></div>
+      <div class="row"><span>Pakrovimo vieta</span><input id="s_pakrovimas"></div>
     </div>
     <div class="box">
-      <h2>Gavėjas</h2>
-      <div class="row"><span>Vardas, pavardė</span><input id="g_vardas"></div>
-      <div class="row"><span>Telefonas</span><input id="g_tel"></div>
-      <div class="row"><span>Adresas</span><input id="g_adresas"></div>
-      <div class="row"><span>Įmonė</span><input id="g_imone"></div>
+      <h2>Pervežimas</h2>
+      <div class="row"><span>Automobilis</span><input id="auto"></div>
+      <div class="row"><span>Vairuotojai</span><input id="vairuotojas"></div>
     </div>
   </section>
 
+  <h2 class="sec">Pristatymo vietos</h2>
+  <table id="stops">
+    <thead>
+      <tr><th>#</th><th>Klientas</th><th>Telefonas</th><th>Adresas</th><th>Pastabos</th><th class="x"></th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  <button class="ghost add" id="addStop" type="button">+ Pridėti pristatymo vietą</button>
+
+  <h2 class="sec">Prekės</h2>
   <table id="items">
     <thead>
       <tr><th>#</th><th>Pavadinimas</th><th>Kiekis</th><th>Vnt.</th><th class="x"></th></tr>
     </thead>
     <tbody></tbody>
   </table>
-  <button class="ghost add" id="addRow" type="button">+ Pridėti eilutę</button>
+  <button class="ghost add" id="addItem" type="button">+ Pridėti prekę</button>
 
-  <section class="notes">
-    <h2>Pastabos</h2>
-    <textarea id="pastabos"></textarea>
-  </section>
+  <div class="bottom">
+    <section class="notes">
+      <h2>Pastabos</h2>
+      <textarea id="pastabos"></textarea>
+    </section>
 
-  <section class="signs">
-    <div class="sign">
-      <div class="line"></div>
-      <small>Išdavė (vardas, pavardė, parašas)</small>
-      <input id="isdave">
-    </div>
-    <div class="sign">
-      <div class="line"></div>
-      <small>Priėmė (vardas, pavardė, parašas)</small>
-      <input id="prieme">
-    </div>
-  </section>
+    <section class="signs">
+      <div class="sign">
+        <div class="line"></div>
+        <small>Išdavė (vardas, pavardė, parašas)</small>
+      </div>
+      <div class="sign">
+        <div class="line"></div>
+        <small>Priėmė (vardas, pavardė, parašas)</small>
+      </div>
+    </section>
+  </div>
 </main>
 
 <script>
@@ -167,140 +174,112 @@
   var $ = function (id) { return document.getElementById(id); };
   var params = new URLSearchParams(location.search);
 
-  // URL parametras -> laukas. Pagal poreikį pridėkite naujų eilučių.
-  var map = {
-    nr: 'nr', data: 'data', pristatymas: 'pristatymas', uzsakymas: 'uzsakymas',
-    vardas: 'g_vardas', tel: 'g_tel', adresas: 'g_adresas', imone: 'g_imone',
-    pastabos: 'pastabos', isdave: 'isdave'
+  // Siuntėjo rekvizitai. Keiskite čia, kai keisis rekvizitai.
+  var REKVIZITAI = {
+    s_imone: 'UAB "Toreda LT"',
+    s_kodas: '306138274',
+    s_pvm: 'LT100015258918',
+    s_adresas: '',                        // <-- įrašykite pilną registracijos adresą
+    s_pakrovimas: 'Žemaitės g. 135, Šiauliai'
+  };
+  Object.keys(REKVIZITAI).forEach(function (id) { $(id).value = REKVIZITAI[id]; });
+
+  // Brigados automobilis. Jei Airtable automobilio nepateikia, jis parenkamas pagal brigados pavadinimą.
+  // Pavadinimas turi sutapti su tuo, ką siunčia Airtable mygtukas.
+  var BRIGADOS_AUTO = {
+    'Tadas, Ighor': 'VW CRAFTER AYG 236',
+    'Vaidas, Lukas': 'VW CRAFTER NYS 927',
+    'Evaldas, Klaidas': 'FIAT DUCATO LZO 637'
   };
 
-  // 1) siuntėjo duomenys, išsaugoti naršyklėje
-  var senderIds = ['s_imone', 's_kodas', 's_adresas', 's_tel', 'isdave'];
-  try {
-    var saved = JSON.parse(localStorage.getItem('vaztarastis_sender') || '{}');
-    senderIds.forEach(function (id) { if (saved[id]) $(id).value = saved[id]; });
-  } catch (e) {}
-
-  // 2a) CSV iš vieno Airtable langelio (?csv=...)
-  // Formatas (skirtukas ;):
-  //   raktas;reikšmė        (nr, data, vardas, tel, adresas, pastabos ...)
-  //   #prekes
-  //   pavadinimas;kiekis;vnt
-  function splitLine(line) {
+  // ?d=  (skirtukas ;)
+  //   1 eilutė:   data ; vairuotojai ; automobilis (automobilį galima praleisti)
+  //   kitos eilutės – pristatymo vietos:   klientas | telefonas | adresas | pastabos  (taip pat tinka ;)
+  function splitLine(line, sep) {
+    sep = sep || ';';
     var out = [], cur = '', q = false;
     for (var i = 0; i < line.length; i++) {
       var c = line.charAt(i);
       if (c === '"') {
         if (q && line.charAt(i + 1) === '"') { cur += '"'; i++; } else { q = !q; }
-      } else if (c === ';' && !q) { out.push(cur); cur = ''; }
+      } else if (c === sep && !q) { out.push(cur); cur = ''; }
       else { cur += c; }
     }
     out.push(cur);
     return out;
   }
 
-  var filled = 0;
-  var csvItems = [];
-  var csv = params.get('csv');
-  if (csv) {
-    var inItems = false;
-    csv.replace(/\r/g, '').split('\n').forEach(function (line) {
-      if (!line.trim()) return;
-      if (line.trim().toLowerCase() === '#prekes') { inItems = true; return; }
-      var cells = splitLine(line);
-      if (inItems) {
-        if (/^pavadinimas$/i.test(cells[0].trim())) return; // antraštė
-        csvItems.push(cells);
-      } else {
-        var key = cells[0].trim().toLowerCase();
-        if (map[key]) { $(map[key]).value = (cells[1] || '').trim(); filled++; }
-      }
-    });
-  }
-
-  // 2a-2) trumpas formatas be raktų (?d=...)
-  // 1 eilutė – laukai šia tvarka (tuščius galo laukus galima praleisti):
-  //   nr;data;vardas;tel;adresas;pastabos;uzsakymas;pristatymas;imone;isdave
-  // Kitos eilutės – prekės: pavadinimas;kiekis;vnt
-  var d = params.get('d');
-  if (d) {
-    var order = ['nr', 'data', 'vardas', 'tel', 'adresas', 'pastabos',
-                 'uzsakymas', 'pristatymas', 'imone', 'isdave'];
-    var dLines = d.replace(/\r/g, '').split('\n').filter(function (l) { return l.trim(); });
-    if (dLines.length) {
-      var head = splitLine(dLines[0]);
-      order.forEach(function (k, i) {
-        if (head[i] && head[i].trim()) { $(map[k]).value = head[i].trim(); filled++; }
-      });
-      dLines.slice(1).forEach(function (l) { csvItems.push(splitLine(l)); });
-    }
-  }
-
-  // 2b) pavieniai laukai iš URL (neprivaloma, veikia kaip anksčiau)
-  Object.keys(map).forEach(function (key) {
-    var v = params.get(key);
-    if (v !== null && v !== '') { $(map[key]).value = v; filled++; }
-  });
-
-  // data pagal nutylėjimą – šiandien
-  if (!$('data').value) $('data').value = new Date().toISOString().slice(0, 10);
-
-  // 3) prekių eilutės. Formatas: pavadinimas|kiekis|vnt;pavadinimas|kiekis|vnt
-  var tbody = document.querySelector('#items tbody');
-
-  function renumber() {
+  function renumber(tbody) {
     Array.prototype.forEach.call(tbody.rows, function (tr, i) {
       tr.querySelector('.n').textContent = i + 1;
     });
   }
-  function addRow(name, qty, unit) {
+  function makeRow(tbody, cells) {
     var tr = document.createElement('tr');
-    tr.innerHTML =
-      '<td class="n"></td>' +
-      '<td><input class="in-name"></td>' +
-      '<td class="q"><input class="in-qty" inputmode="decimal"></td>' +
-      '<td class="u"><input class="in-unit"></td>' +
-      '<td class="x"><button type="button" title="Šalinti eilutę" aria-label="Šalinti eilutę">×</button></td>';
-    tr.querySelector('.in-name').value = name || '';
-    tr.querySelector('.in-qty').value = qty || '';
-    tr.querySelector('.in-unit').value = unit || '';
-    tr.querySelector('.x button').addEventListener('click', function () { tr.remove(); renumber(); });
-    tbody.appendChild(tr);
-    renumber();
-  }
-
-  var itemsParam = params.get('prekes');
-  if (itemsParam) {
-    itemsParam.split(';').forEach(function (chunk) {
-      if (!chunk.trim()) return;
-      var p = chunk.split('|');
-      addRow((p[0] || '').trim(), (p[1] || '').trim(), (p[2] || 'vnt.').trim());
+    var html = '<td class="n"></td>';
+    cells.forEach(function (c) {
+      html += '<td class="' + (c.cls || '') + '"><input inputmode="' + (c.mode || 'text') + '"></td>';
     });
+    html += '<td class="x"><button type="button" title="Šalinti eilutę" aria-label="Šalinti eilutę">×</button></td>';
+    tr.innerHTML = html;
+    var inputs = tr.querySelectorAll('td input');
+    cells.forEach(function (c, i) { inputs[i].value = c.val || ''; });
+    tr.querySelector('.x button').addEventListener('click', function () { tr.remove(); renumber(tbody); });
+    tbody.appendChild(tr);
+    renumber(tbody);
   }
-  csvItems.forEach(function (c) {
-    addRow((c[0] || '').trim(), (c[1] || '').trim(), (c[2] || 'vnt.').trim());
-  });
-  while (tbody.rows.length < 8) addRow();
 
-  $('addRow').addEventListener('click', function () { addRow(); });
+  var stopsBody = document.querySelector('#stops tbody');
+  var itemsBody = document.querySelector('#items tbody');
+  function addStop(c) {
+    c = c || [];
+    makeRow(stopsBody, [
+      { val: (c[0] || '').trim() },
+      { val: (c[1] || '').trim(), cls: 't', mode: 'tel' },
+      { val: (c[2] || '').trim() },
+      { val: (c[3] || '').trim() }
+    ]);
+  }
+  function addItem(c) {
+    c = c || [];
+    makeRow(itemsBody, [
+      { val: (c[0] || '').trim() },
+      { val: (c[1] || '').trim(), cls: 'q', mode: 'decimal' },
+      { val: (c[2] || '').trim(), cls: 'u' }
+    ]);
+  }
+
+  var filled = 0;
+  var d = params.get('d');
+  if (d) {
+    var lines = d.replace(/\r/g, '').split('\n').filter(function (l) { return l.trim(); });
+    if (lines.length) {
+      var head = splitLine(lines[0]);
+      [['data', 0], ['vairuotojas', 1], ['auto', 2]].forEach(function (p) {
+        var v = (head[p[1]] || '').trim();
+        if (v) { $(p[0]).value = v; filled++; }
+      });
+      lines.slice(1).forEach(function (l) {
+        addStop(splitLine(l, l.indexOf('|') >= 0 ? '|' : ';'));
+        filled++;
+      });
+    }
+  }
+
+  if (!$('auto').value && BRIGADOS_AUTO[$('vairuotojas').value.trim()]) {
+    $('auto').value = BRIGADOS_AUTO[$('vairuotojas').value.trim()];
+  }
+  if (!$('data').value) $('data').value = new Date().toISOString().slice(0, 10);
+  while (stopsBody.rows.length < 2) addStop();
+  while (itemsBody.rows.length < 5) addItem();
+
+  $('addStop').addEventListener('click', function () { addStop(); });
+  $('addItem').addEventListener('click', function () { addItem(); });
   $('print').addEventListener('click', function () { window.print(); });
 
-  $('saveSender').addEventListener('click', function () {
-    var o = {};
-    senderIds.forEach(function (id) { o[id] = $(id).value; });
-    try {
-      localStorage.setItem('vaztarastis_sender', JSON.stringify(o));
-      $('hint').textContent = 'Siuntėjo duomenys išsaugoti šioje naršyklėje.';
-    } catch (e) {
-      $('hint').textContent = 'Nepavyko išsaugoti.';
-    }
-  });
-
   $('hint').textContent = filled
-    ? 'Užpildyta iš Airtable (' + filled + ' laukai). Galite taisyti prieš spausdinant.'
+    ? 'Užpildyta iš Airtable. Galite taisyti prieš spausdinant.'
     : 'Nėra duomenų iš Airtable – užpildykite ranka.';
-
-  document.title = 'Važtaraštis ' + ($('nr').value || '');
 })();
 </script>
 </body>
